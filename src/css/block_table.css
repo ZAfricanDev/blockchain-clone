@@ -1,0 +1,23 @@
+@media (max-width: 768px) {
+  .blocks-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+}
+
+.blocks-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.blocks-table th,
+.blocks-table td {
+  padding: 8px;
+  border-bottom: 1px solid #ddd;
+}
+
+.blocks-table th {
+  text-align: left;
+  background-color: #f1f1f1;
+}

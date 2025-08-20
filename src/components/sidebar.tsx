@@ -4,7 +4,7 @@ import BtcIcon from "../assets/icons/btc.svg";
 import EthIcon from "../assets/icons/eth.svg";
 import BtcCashIcon from "../assets/icons/btc-cash.svg";
 
-import "../css/sidebar.css";
+import "../css/side_bar.css";
 
 export function SideBar() {
   return (

@@ -1,14 +1,10 @@
 import React from "react";
 import "./css/App.css";
 import { SideBar } from "./components/sidebar";
-
-interface Block {
-  height: number;
-  hash: string;
-  mined: string;
-  miner: string;
-  size: string;
-}
+import { Header } from "./components/header";
+import { SearchBar } from "./components/search_bar";
+import { BlockExplorerTable } from "./components/block_explorer_table";
+import { Block } from "./types/types";
 
 const blocks: Block[] = [
   {
@@ -86,41 +82,16 @@ const blocks: Block[] = [
 export default function BlockExplorer() {
   return (
     <div className="container">
-      <SideBar />
+      <Header />
 
-      <main className="main-content">
-        <div className="search-bar">
-          <input
-            type="text"
-            placeholder="Search for things like address, transaction, block"
-          />
-          <button>Search</button>
-        </div>
+      <div className="content">
+        <SideBar />
+        <main className="main-content">
+          <SearchBar />
 
-        <h3>Latest blocks</h3>
-        <table className="blocks-table">
-          <thead>
-            <tr>
-              <th>Height</th>
-              <th>Hash</th>
-              <th>Mined</th>
-              <th>Miner</th>
-              <th>Size</th>
-            </tr>
-          </thead>
-          <tbody>
-            {blocks.map((block, index) => (
-              <tr key={index}>
-                <td>{block.height}</td>
-                <td>{block.hash}</td>
-                <td>{block.mined}</td>
-                <td>{block.miner}</td>
-                <td>{block.size}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </main>
+          <BlockExplorerTable blocks={blocks} />
+        </main>
+      </div>
     </div>
   );
 }
