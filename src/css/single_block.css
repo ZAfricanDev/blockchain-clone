@@ -1,0 +1,35 @@
+.block-details {
+  font-family: Arial, sans-serif;
+  width: 80%;
+  margin: 20px auto;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #fff;
+}
+
+.block-details h2 {
+  margin-bottom: 5px;
+}
+
+.block-details p {
+  color: #555;
+  margin-bottom: 20px;
+}
+
+.block-table .row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.block-table .row span:first-child {
+  font-weight: bold;
+  color: #333;
+}
+
+.block-table .row span:last-child {
+  color: #666;
+  word-break: break-all;
+}
