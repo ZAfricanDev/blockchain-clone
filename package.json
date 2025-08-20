@@ -41,5 +41,14 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@types/connect": "^3.4.38",
+    "@types/estree": "^1.0.8",
+    "@types/istanbul-lib-coverage": "^2.0.6",
+    "@types/istanbul-reports": "^3.0.4",
+    "@types/json-schema": "^7.0.15",
+    "@types/prettier": "^2.7.3",
+    "@types/trusted-types": "^2.0.7"
   }
 }
