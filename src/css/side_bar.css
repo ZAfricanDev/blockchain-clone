@@ -1,9 +1,14 @@
 .sidebar {
   width: 220px;
   padding: 20px;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  height: calc(100vh - 50px);
+  overflow-y: auto;
 }
 
 .sidebar h2 {
+  margin-top: 0;
   font-size: 18px;
   margin-bottom: 20px;
 }
@@ -32,4 +37,18 @@
 .crypto-price {
   color: #555;
   font-size: 14px;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+    height: auto;
+    overflow: visible;
+    margin-bottom: 20px;
+    padding: 10px 0;
+  }
+
+  .crypto {
+    margin-bottom: 15px;
+  }
 }

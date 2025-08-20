@@ -1,9 +1,13 @@
-import React from "react";
 import "./css/App.css";
+
+import React from "react";
+import { Routes, Route } from "react-router-dom";
+
 import { SideBar } from "./components/sidebar";
 import { Header } from "./components/header";
 import { SearchBar } from "./components/search_bar";
 import { BlockExplorerTable } from "./components/block_explorer_table";
+
 import { Block } from "./types/types";
 
 const blocks: Block[] = [
@@ -85,12 +89,20 @@ export default function BlockExplorer() {
       <Header />
 
       <div className="content">
-        <SideBar />
-        <main className="main-content">
-          <SearchBar />
-
-          <BlockExplorerTable blocks={blocks} />
-        </main>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <main className="main-content">
+                <SideBar />
+                <div className="content-area">
+                  <SearchBar />
+                  <BlockExplorerTable blocks={blocks} />
+                </div>
+              </main>
+            }
+          />
+        </Routes>
       </div>
     </div>
   );
