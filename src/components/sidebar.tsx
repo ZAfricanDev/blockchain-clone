@@ -2,7 +2,7 @@ import React from "react";
 
 import BtcIcon from "../assets/icons/btc.svg";
 import EthIcon from "../assets/icons/eth.svg";
-import BtcCashIcon from "../assets/icons/btc-cash.svg";
+import BtcCashIcon from "../assets/icons/bch.svg";
 
 import "../css/side_bar.css";
 
