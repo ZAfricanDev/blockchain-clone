@@ -6,6 +6,13 @@
   }
 }
 
+.blocks-table td.hash-cell {
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .blocks-table {
   width: 100%;
   border-collapse: collapse;
@@ -19,5 +26,6 @@
 
 .blocks-table th {
   text-align: left;
-  background-color: #f1f1f1;
+  margin-bottom: 5px;
+  color: rgb(168, 164, 164);
 }

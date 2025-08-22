@@ -1,12 +1,14 @@
-import React from "react";
-import { Block } from "../types/types";
 import "../css/block_table.css";
+import React from "react";
+
+import { BlockSummary, condenseHash } from "../api/blocks";
 
 type Props = {
-  blocks: Block[];
+  blocks?: BlockSummary[];
 };
 
 export function BlockExplorerTable({ blocks }: Props) {
+  if (!blocks) return null;
   return (
     <div>
       <h3>Latest blocks</h3>
@@ -16,7 +18,6 @@ export function BlockExplorerTable({ blocks }: Props) {
             <th>Height</th>
             <th>Hash</th>
             <th>Mined</th>
-            <th>Miner</th>
             <th>Size</th>
           </tr>
         </thead>
@@ -24,10 +25,9 @@ export function BlockExplorerTable({ blocks }: Props) {
           {blocks.map((block, index) => (
             <tr key={index}>
               <td>{block.height}</td>
-              <td>{block.hash}</td>
-              <td>{block.mined}</td>
-              <td>{block.miner}</td>
-              <td>{block.size}</td>
+              <td className="hash-cell">{condenseHash(block.hash)}</td>
+              <td>{block.time}</td>
+              <td>{block.size?.toLocaleString?.() ?? "N/A"}</td>
             </tr>
           ))}
         </tbody>
