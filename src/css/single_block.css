@@ -58,11 +58,16 @@
 .transactions-table {
   width: 100%;
   border-collapse: collapse;
+  border-spacing: 0;
 }
 
 .transaction {
   border-bottom: 1px solid #eee;
   font-size: 14px;
+  display: grid;
+  grid-template-columns: 1fr 80px 260px;
+  gap: 12px;
+  align-items: start;
 }
 
 .transaction td {
@@ -71,19 +76,25 @@
 }
 
 .tx-left {
-  max-width: 300px;
+  min-width: 0;
   color: #333;
 }
 
 .hash,
 .fee {
   display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .hash h4,
 .fee h4 {
   color: #a29e9e;
-  margin-right: 3em;
+  margin: 0;
+  width: 120px;
+  flex: 0 0 120px;
+  font-weight: 600;
 }
 
 .hash-info,
@@ -91,20 +102,23 @@
   display: flex;
   flex-direction: column;
   gap: 5px;
+  min-width: 0;
 }
 
 .tx-left .hash a {
   color: #1a73e8;
   text-decoration: none;
-  word-break: break-all;
+  word-break: break-word;
   display: block;
   margin-bottom: 4px;
+  overflow-wrap: anywhere;
 }
 
 .tx-left .hash .input-label {
   font-size: 13px;
   color: #059669;
   margin-bottom: 2px;
+  word-break: break-word;
 }
 
 .tx-left .fee {
@@ -117,6 +131,7 @@
   font-size: 12px;
   color: #999;
   margin-top: 2px;
+  word-break: break-word;
 }
 
 .tx-middle {
@@ -124,16 +139,26 @@
   font-size: 16px;
   color: #666;
   width: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .arrow {
   width: 50px;
   height: 30px;
+  max-width: 100%;
+  height: auto;
 }
 
 .tx-right {
   font-size: 13px;
   text-align: right;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
 }
 
 .tx-right .timestamp {
@@ -145,12 +170,15 @@
 .tx-right .amounts {
   margin-bottom: 8px;
   color: #333;
+  text-align: right;
+  word-break: break-word;
 }
 
 .pills {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
+  gap: 6px;
 }
 
 .pill {
@@ -169,4 +197,58 @@
 .pill.blue {
   background: #e5f0ff;
   color: #1a73e8;
+}
+
+@media (max-width: 900px) {
+  .transaction {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 8px 0;
+  }
+
+  .transaction td {
+    padding: 8px 0;
+  }
+
+  .hash h4,
+  .fee h4 {
+    width: auto;
+    flex: 0 0 auto;
+    margin-right: 8px;
+  }
+
+  .hash,
+  .fee {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .tx-middle {
+    justify-self: center;
+  }
+
+  .tx-right {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .tx-right .timestamp {
+    margin-bottom: 6px;
+  }
+
+  .pills {
+    flex-direction: row;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .pill {
+    margin-top: 0;
+  }
+
+  .arrow {
+    width: 36px;
+    height: auto;
+  }
 }

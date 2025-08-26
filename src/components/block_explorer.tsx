@@ -2,10 +2,11 @@ import React, { useEffect, useRef, useState } from "react";
 import { SideBar } from "./sidebar";
 import { SearchBar } from "./search_bar";
 import { BlockExplorerTable } from "./block_explorer_table";
-import { BlockSummary, getLastBlocks } from "../api/blocks";
+import { BlockSummary, getLastBlocks, Prices } from "../api/blocks";
 
 export function BlockExplorer() {
   const [blocks, setBlocks] = useState<BlockSummary[]>();
+  const [prices, setPrices] = useState<Prices | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -17,7 +18,6 @@ export function BlockExplorer() {
     (async () => {
       try {
         const res = await getLastBlocks(20, Date.now(), 7);
-        console.log("res", res);
         if (!mounted) return;
         setBlocks(res);
       } catch (err: any) {

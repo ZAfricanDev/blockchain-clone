@@ -2,6 +2,7 @@ import "../css/block_table.css";
 import React from "react";
 
 import { BlockSummary, condenseHash } from "../api/blocks";
+import { Link } from "react-router";
 
 type Props = {
   blocks?: BlockSummary[];
@@ -25,7 +26,9 @@ export function BlockExplorerTable({ blocks }: Props) {
           {blocks.map((block, index) => (
             <tr key={index}>
               <td>{block.height}</td>
-              <td className="hash-cell">{condenseHash(block.hash)}</td>
+              <td className="hash-cell">
+                <Link to={`btc/${block.hash}`}>{condenseHash(block.hash)}</Link>
+              </td>
               <td>{block.time}</td>
               <td>{block.size?.toLocaleString?.() ?? "N/A"}</td>
             </tr>
