@@ -22,19 +22,23 @@ export function SingleBlock({ block }: Props) {
   const [blockInfo, setBlockInfo] = useState<Block | null>(null);
   const [loading, setLoading] = useState(false);
 
+  console.log("blockInfo", blockInfo);
+
   useEffect(() => {
-    const hash = paramBlock ?? block?.hash;
-    if (!hash) return;
+    if (!blockInfo) {
+      const hash = paramBlock ?? block?.hash;
+      if (!hash) return;
 
-    // If a block prop is provided and there's no route param, don't re-fetch.
-    if (!paramBlock && block) return;
+      // If a block prop is provided and there's no route param, don't re-fetch.
+      if (!paramBlock && block) return;
 
-    setLoading(true);
-    fetchBlockByHash(hash)
-      .then((b) => setBlockInfo(b as Block))
-      .catch((err) => console.error("fetchBlockByHash:", err))
-      .finally(() => setLoading(false));
-  }, [paramBlock, block]);
+      setLoading(true);
+      fetchBlockByHash(hash)
+        .then((b) => setBlockInfo(b as Block))
+        .catch((err) => console.error("fetchBlockByHash:", err))
+        .finally(() => setLoading(false));
+    }
+  }, [block]);
 
   const data = blockInfo ?? block ?? null;
 
@@ -106,7 +110,7 @@ export function SingleBlock({ block }: Props) {
   const timestamp =
     data.time != null ? new Date(data.time * 1000).toLocaleString() : "—";
   const height = (data as any).height ?? data.block_index ?? "—";
-  const miner = data.relayed_by ?? "—";
+  const miner = data.miner;
   const numberOfTransactions = data.n_tx ?? (data.tx ? data.tx.length : "—");
   const difficulty = (data as any).difficulty ?? "—";
   const merkleRoot =
@@ -152,7 +156,9 @@ export function SingleBlock({ block }: Props) {
           </tr>
           <tr>
             <td>Miner</td>
-            <td>{miner}</td>
+            <td>
+              {miner ? <a href={miner?.link}>{miner?.name}</a> : "Unknown"}
+            </td>
           </tr>
           <tr>
             <td>Number of Transactions</td>

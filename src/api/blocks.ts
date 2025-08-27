@@ -1,3 +1,5 @@
+import { findMiningPool, MinerInfo } from "./miner";
+
 export type LatestBlockResponse = {
   hash: string;
   time: string;
@@ -45,11 +47,12 @@ export type Transaction = {
 };
 
 export type Block = {
+  miner: MinerInfo | null;
   hash: string;
   time?: number;
   height?: number;
   n_tx?: number;
-  tx?: Transaction[];
+  tx: Transaction[];
   relayed_by?: string;
   bits?: number;
   difficulty?: number;
@@ -130,13 +133,7 @@ export async function fetchBlockByHash(
   }
   const json = (await res.json()) as Block;
 
-  if (Array.isArray(json.tx)) {
-    const limit = Math.max(0, Math.floor(txLimit));
-    if (limit === 0) json.tx = [];
-    else if (json.tx.length > limit) json.tx = json.tx.slice(-limit);
-  }
-
-  return json;
+  return { ...json, miner: findMiningPool(json.tx[0]?.inputs[0].script) };
 }
 
 export type Prices = { BTC: number; ETH: number; BCH: number };
