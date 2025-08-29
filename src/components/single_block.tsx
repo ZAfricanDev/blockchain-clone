@@ -4,7 +4,13 @@ import "../css/single_block.css";
 import { useParams } from "react-router-dom";
 import { Coins, Icons } from "../constants";
 
-import { fetchBlockByHash, formatBtc, mapApiTxToUi } from "../api/blocks";
+import {
+  fetchBlockByHash,
+  formatBtc,
+  getBlockReward,
+  getDifficulty,
+  mapApiTxToUi,
+} from "../api/blocks";
 import type {
   Block,
   Transaction as ApiTransaction,
@@ -24,13 +30,14 @@ export function SingleBlock({ block }: Props) {
 
   console.log("blockInfo", blockInfo);
 
+  console.log(localStorage.getItem("latestBlockHeight"));
+
   useEffect(() => {
+    console.log("effect called");
     if (!blockInfo) {
+      console.log("effect called 2");
       const hash = paramBlock ?? block?.hash;
       if (!hash) return;
-
-      // If a block prop is provided and there's no route param, don't re-fetch.
-      if (!paramBlock && block) return;
 
       setLoading(true);
       fetchBlockByHash(hash)
@@ -38,7 +45,7 @@ export function SingleBlock({ block }: Props) {
         .catch((err) => console.error("fetchBlockByHash:", err))
         .finally(() => setLoading(false));
     }
-  }, [block]);
+  }, [blockInfo]);
 
   const data = blockInfo ?? block ?? null;
 
@@ -106,13 +113,15 @@ export function SingleBlock({ block }: Props) {
   }
 
   const hash = data.hash ?? "—";
-  const confirmations = (data as any).confirmations ?? "—";
+
+  const confirmations = 0;
+
   const timestamp =
     data.time != null ? new Date(data.time * 1000).toLocaleString() : "—";
   const height = (data as any).height ?? data.block_index ?? "—";
   const miner = data.miner;
   const numberOfTransactions = data.n_tx ?? (data.tx ? data.tx.length : "—");
-  const difficulty = (data as any).difficulty ?? "—";
+  const difficulty = getDifficulty(data.bits as number) ?? "—";
   const merkleRoot =
     (data as any).mrkl_root ?? (data as any).merkle_root ?? "—";
   const version = data.ver ?? "—";
@@ -120,10 +129,10 @@ export function SingleBlock({ block }: Props) {
   const weight = (data as any).weight ?? "—";
   const size = data.size ?? "—";
   const nonce = data.nonce ?? "—";
+  const reward = getBlockReward(txs);
 
   const transactionVolume = formatBtc(totalOutputSat);
   const feeReward = Number.isFinite(totalFeeSat) ? formatBtc(totalFeeSat) : "—";
-  const blockReward = "—"; // keep placeholder; hook getBlockDetails if/when you want real reward
 
   const icon = coin ? Icons[coin] : null;
 
@@ -198,7 +207,7 @@ export function SingleBlock({ block }: Props) {
           </tr>
           <tr>
             <td>Block Reward</td>
-            <td>{blockReward}</td>
+            <td>{reward}</td>
           </tr>
           <tr>
             <td>Fee Reward</td>

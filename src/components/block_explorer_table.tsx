@@ -3,7 +3,6 @@ import React from "react";
 
 import { BlockSummary, condenseHash } from "../api/blocks";
 import { Link } from "react-router";
-import { findMiningPool } from "../api/miner";
 
 type Props = {
   blocks?: BlockSummary[];

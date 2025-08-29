@@ -6,7 +6,6 @@ import { BlockSummary, getLastBlocks, Prices } from "../api/blocks";
 
 export function BlockExplorer() {
   const [blocks, setBlocks] = useState<BlockSummary[]>();
-  const [prices, setPrices] = useState<Prices | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

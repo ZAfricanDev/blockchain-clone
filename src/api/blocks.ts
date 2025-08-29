@@ -106,6 +106,9 @@ export async function getLastBlocks(
 
   const cutoff = Math.floor(fromTime / 1000) - daysBack * 24 * 60 * 60;
 
+  //Set latest block height to local storage to determine confirmations
+  localStorage.setItem("latestBlockHeight", json[0].height.toString());
+
   return json
     .filter((b) => b.time >= cutoff)
     .slice(0, limit)
@@ -117,10 +120,7 @@ export async function getLastBlocks(
     }));
 }
 
-export async function fetchBlockByHash(
-  blockHash: string,
-  txLimit = 10
-): Promise<Block> {
+export async function fetchBlockByHash(blockHash: string): Promise<Block> {
   if (!blockHash) throw new Error("blockHash required");
   const res = await fetch(
     `https://blockchain.info/rawblock/${encodeURIComponent(
@@ -140,10 +140,16 @@ export type Prices = { BTC: number; ETH: number; BCH: number };
 
 export async function fetchPrices(): Promise<Prices> {
   const res = await fetch("https://blockchain.info/ticker?cors=true");
+  const valrResponse = await fetch(
+    "https://api.valr.com/v1/public/ETHUSDT/marketsummary"
+  );
+
   const json = await res.json();
+  const valrJson = await valrResponse.json();
+
   return {
     BTC: json.USD?.last ?? -1,
-    ETH: json.ETH?.USD?.last ?? -1,
+    ETH: Number(valrJson.lastTradedPrice) ?? -1,
     BCH: json.BCH?.USD?.last ?? -1,
   };
 }
@@ -160,6 +166,31 @@ export const formatBtc = (satoshis?: number | string) =>
 
 function safeInputs(inputs?: TxInput[] | any): TxInput[] {
   return Array.isArray(inputs) ? (inputs as TxInput[]) : [];
+}
+
+export function getBlockReward(transactions: any) {
+  if (!transactions || transactions.length === 0) return 0;
+
+  const coinbaseTx = transactions[0];
+
+  const totalSatoshis = coinbaseTx.out.reduce(
+    (sum: number, output: any) => sum + output.value,
+    0
+  );
+
+  return formatBtc(totalSatoshis);
+}
+
+function bitsToTarget(bits: number): bigint {
+  const exponent = bits >>> 24;
+  const mantissa = bits & 0xffffff;
+  return BigInt(mantissa) << BigInt(8 * (exponent - 3));
+}
+
+export function getDifficulty(bits: number): number {
+  const maxTarget = bitsToTarget(0x1d00ffff); // difficulty 1 target
+  const target = bitsToTarget(bits);
+  return Number(maxTarget) / Number(target);
 }
 
 export function mapApiTxToUi(
