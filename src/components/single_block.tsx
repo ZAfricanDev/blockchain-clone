@@ -27,10 +27,7 @@ export function SingleBlock({ block }: Props) {
   const { block: paramBlock, coin } = params;
   const [blockInfo, setBlockInfo] = useState<Block | null>(null);
   const [loading, setLoading] = useState(false);
-
-  console.log("blockInfo", blockInfo);
-
-  console.log(localStorage.getItem("latestBlockHeight"));
+  const highestBlock = Number(localStorage.getItem("latestBlockHeight"));
 
   useEffect(() => {
     console.log("effect called");
@@ -48,6 +45,8 @@ export function SingleBlock({ block }: Props) {
   }, [blockInfo]);
 
   const data = blockInfo ?? block ?? null;
+
+  console.log(data);
 
   const txs: ApiTransaction[] = Array.isArray(data?.tx)
     ? (data!.tx as ApiTransaction[])
@@ -114,7 +113,9 @@ export function SingleBlock({ block }: Props) {
 
   const hash = data.hash ?? "—";
 
-  const confirmations = 0;
+  const confirmations = blockInfo?.height
+    ? highestBlock - blockInfo?.height
+    : 1;
 
   const timestamp =
     data.time != null ? new Date(data.time * 1000).toLocaleString() : "—";
