@@ -93,31 +93,57 @@ type BlockResponse = {
   time: number;
 };
 
-export type BlockSummary = LatestBlockResponse;
-
 export async function getLastBlocks(
   limit: number,
   fromTime: number,
   daysBack: number
-): Promise<BlockSummary[]> {
+): Promise<Block[]> {
+  const FIVE_MINUTES_MS = 5 * 60 * 1000;
+
+  const lastRetrieved = Number(localStorage.getItem("block_info_time")) || 0;
+
+  if (Date.now() - lastRetrieved < FIVE_MINUTES_MS) {
+    const stored = localStorage.getItem("block_info");
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored) as Block[];
+        // Respect the requested limit
+        return Array.isArray(parsed) ? parsed.slice(0, limit) : [];
+      } catch (err) {
+        console.warn(
+          "Unable to parse block_info from localStorage, fetching remotely",
+          err
+        );
+      }
+    }
+  }
+
   const url = `https://blockchain.info/blocks/${fromTime}?format=json&cors=true`;
   const res = await fetch(url);
+  if (!res.ok) {
+    const body = await res.text().catch(() => null);
+    throw { status: res.status, statusText: res.statusText, body };
+  }
   const json: BlockResponse[] = await res.json();
 
   const cutoff = Math.floor(fromTime / 1000) - daysBack * 24 * 60 * 60;
 
-  //Set latest block height to local storage to determine confirmations
-  localStorage.setItem("latestBlockHeight", json[0].height.toString());
+  const latestHeight = json[0]?.height ?? 0;
+  localStorage.setItem("latestBlockHeight", latestHeight.toString());
 
-  return json
-    .filter((b) => b.time >= cutoff)
-    .slice(0, limit)
-    .map((b) => ({
-      hash: b.hash,
-      height: b.height,
-      time: timeAgo(b.time * 1000),
-      size: 0,
-    }));
+  const relevantItems = json.filter((b) => b.time >= cutoff).slice(0, limit);
+
+  const results = await Promise.all(
+    relevantItems.map(async (item) => {
+      return fetchBlockByHash(item.hash);
+    })
+  );
+
+  localStorage.setItem("block_info", JSON.stringify(results));
+
+  localStorage.setItem("block_info_time", String(Date.now()));
+
+  return results;
 }
 
 export async function fetchBlockByHash(blockHash: string): Promise<Block> {
@@ -132,6 +158,8 @@ export async function fetchBlockByHash(blockHash: string): Promise<Block> {
     throw { status: res.status, statusText: res.statusText, body };
   }
   const json = (await res.json()) as Block;
+  // Limit tx to 20 due to local storage constraint
+  json.tx = json.tx.slice(0, 20);
 
   return { ...json, miner: findMiningPool(json.tx[0]?.inputs[0].script) };
 }

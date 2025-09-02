@@ -1,4 +1,3 @@
-// src/components/SingleBlock.tsx
 import React, { useEffect, useMemo, useState } from "react";
 import "../css/single_block.css";
 import { useParams } from "react-router-dom";
@@ -18,22 +17,20 @@ import type {
 } from "../api/blocks";
 import { Transactions } from "./transactions";
 
-type Props = {
-  block?: Block;
-};
-
-export function SingleBlock({ block }: Props) {
+export function SingleBlock() {
   const params = useParams<{ coin: Coins; block: string }>();
-  const { block: paramBlock, coin } = params;
-  const [blockInfo, setBlockInfo] = useState<Block | null>(null);
+  const { coin, block: blockHash } = params;
+
+  const localItems = localStorage.getItem("block_info") || "[]";
+  const localBlocks = JSON.parse(localItems);
+  const localBlock = localBlocks.find((item: Block) => item.hash === blockHash);
+
+  const [blockInfo, setBlockInfo] = useState<Block | null>(localBlock);
   const [loading, setLoading] = useState(false);
-  const highestBlock = Number(localStorage.getItem("latestBlockHeight"));
 
   useEffect(() => {
-    console.log("effect called");
-    if (!blockInfo) {
-      console.log("effect called 2");
-      const hash = paramBlock ?? block?.hash;
+    if (!localBlock) {
+      const hash = blockHash ?? blockInfo?.hash;
       if (!hash) return;
 
       setLoading(true);
@@ -42,18 +39,18 @@ export function SingleBlock({ block }: Props) {
         .catch((err) => console.error("fetchBlockByHash:", err))
         .finally(() => setLoading(false));
     }
-  }, [blockInfo]);
+  }, [localBlock, blockHash]);
 
-  const data = blockInfo ?? block ?? null;
+  const highestBlock = Number(localStorage.getItem("latestBlockHeight"));
 
-  console.log(data);
-
-  const txs: ApiTransaction[] = Array.isArray(data?.tx)
-    ? (data!.tx as ApiTransaction[])
+  const txs: ApiTransaction[] = Array.isArray(blockInfo?.tx)
+    ? (blockInfo!.tx as ApiTransaction[])
     : [];
 
   const { transactions, totalOutputSat, totalFeeSat } = useMemo(() => {
-    const mapped: UiTransaction[] = txs.map((t) => mapApiTxToUi(t, data?.time));
+    const mapped: UiTransaction[] = txs.map((t) =>
+      mapApiTxToUi(t, blockInfo?.time)
+    );
 
     const totalOutputSat = txs.reduce((acc: number, tx: ApiTransaction) => {
       const outSum = Array.isArray(tx.out)
@@ -93,9 +90,9 @@ export function SingleBlock({ block }: Props) {
 
     return { transactions: mapped, totalOutputSat, totalFeeSat };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [txs, data?.time]);
+  }, [txs]);
 
-  if (loading && !data) {
+  if (loading && !blockInfo) {
     return (
       <div className="block-details">
         <p className="loading">Loading...</p>
@@ -103,33 +100,36 @@ export function SingleBlock({ block }: Props) {
     );
   }
 
-  if (!data) {
+  if (!blockInfo) {
     return (
       <div className="block-details">
-        <p>No block data</p>
+        <p>No block info</p>
       </div>
     );
   }
 
-  const hash = data.hash ?? "—";
+  const hash = blockInfo.hash ?? "—";
 
   const confirmations = blockInfo?.height
-    ? highestBlock - blockInfo?.height
+    ? highestBlock - blockInfo?.height + 1
     : 1;
 
   const timestamp =
-    data.time != null ? new Date(data.time * 1000).toLocaleString() : "—";
-  const height = (data as any).height ?? data.block_index ?? "—";
-  const miner = data.miner;
-  const numberOfTransactions = data.n_tx ?? (data.tx ? data.tx.length : "—");
-  const difficulty = getDifficulty(data.bits as number) ?? "—";
+    blockInfo.time != null
+      ? new Date(blockInfo.time * 1000).toLocaleString()
+      : "—";
+  const height = (blockInfo as any).height ?? blockInfo.block_index ?? "—";
+  const miner = blockInfo.miner;
+  const numberOfTransactions =
+    blockInfo.n_tx ?? (blockInfo.tx ? blockInfo.tx.length : "—");
+  const difficulty = getDifficulty(blockInfo.bits as number) ?? "—";
   const merkleRoot =
-    (data as any).mrkl_root ?? (data as any).merkle_root ?? "—";
-  const version = data.ver ?? "—";
-  const bits = data.bits ?? "—";
-  const weight = (data as any).weight ?? "—";
-  const size = data.size ?? "—";
-  const nonce = data.nonce ?? "—";
+    (blockInfo as any).mrkl_root ?? (blockInfo as any).merkle_root ?? "—";
+  const version = blockInfo.ver ?? "—";
+  const bits = blockInfo.bits ?? "—";
+  const weight = (blockInfo as any).weight ?? "—";
+  const size = blockInfo.size ?? "—";
+  const nonce = blockInfo.nonce ?? "—";
   const reward = getBlockReward(txs);
 
   const transactionVolume = formatBtc(totalOutputSat);

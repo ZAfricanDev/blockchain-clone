@@ -2,10 +2,10 @@ import React, { useEffect, useRef, useState } from "react";
 import { SideBar } from "./sidebar";
 import { SearchBar } from "./search_bar";
 import { BlockExplorerTable } from "./block_explorer_table";
-import { BlockSummary, getLastBlocks, Prices } from "../api/blocks";
+import { Block, getLastBlocks } from "../api/blocks";
 
 export function BlockExplorer() {
-  const [blocks, setBlocks] = useState<BlockSummary[]>();
+  const [blocks, setBlocks] = useState<Block[]>();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,7 +38,7 @@ export function BlockExplorer() {
       <SideBar />
       <div className="content-area">
         <SearchBar />
-        {loading && <div>Loading latest block…</div>}
+        {loading && <div>Loading latest blocks…</div>}
         {error && <div style={{ color: "crimson" }}>Error: {error}</div>}
         <BlockExplorerTable blocks={blocks} />
       </div>

@@ -10,7 +10,6 @@ type Props = {
 };
 
 export function Transactions({ transactions }: Props) {
-  console.log("transaction", transactions);
   return (
     <div className="transactions">
       <h3>Transactions</h3>

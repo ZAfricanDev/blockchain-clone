@@ -28,7 +28,7 @@ export function SideBar() {
 
     return () => clearInterval(interval);
   }, []);
-  console.log(prices);
+
   return (
     <aside className="sidebar">
       <h2>Block Explorer</h2>

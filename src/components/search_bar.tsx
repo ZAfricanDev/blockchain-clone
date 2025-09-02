@@ -23,7 +23,7 @@ export function SearchBar() {
     <div className="search-bar">
       <input
         type="text"
-        placeholder="Enter Hash"
+        placeholder="Enter Hash or Height"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         onKeyDown={handleKeyPress}
