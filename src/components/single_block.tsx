@@ -16,14 +16,19 @@ import type {
   UiTransaction,
 } from "../api/blocks";
 import { Transactions } from "./transactions";
+import { hexToAscii } from "../api/miner";
 
 export function SingleBlock() {
   const params = useParams<{ coin: Coins; block: string }>();
   const { coin, block: blockHash } = params;
-
+  console.log("blockHash", blockHash);
   const localItems = localStorage.getItem("block_info") || "[]";
   const localBlocks = JSON.parse(localItems);
-  const localBlock = localBlocks.find((item: Block) => item.hash === blockHash);
+  console.log("localBlocks", localBlocks);
+  const localBlock = localBlocks.find(
+    (item: Block) =>
+      item.hash === blockHash || item.height === Number(blockHash)
+  );
 
   const [blockInfo, setBlockInfo] = useState<Block | null>(localBlock);
   const [loading, setLoading] = useState(false);
@@ -131,6 +136,7 @@ export function SingleBlock() {
   const size = blockInfo.size ?? "—";
   const nonce = blockInfo.nonce ?? "—";
   const reward = getBlockReward(txs);
+  const message = hexToAscii(txs[0]?.inputs[0].script);
 
   const transactionVolume = formatBtc(totalOutputSat);
   const feeReward = Number.isFinite(totalFeeSat) ? formatBtc(totalFeeSat) : "—";
@@ -213,6 +219,10 @@ export function SingleBlock() {
           <tr>
             <td>Fee Reward</td>
             <td>{feeReward}</td>
+          </tr>
+          <tr>
+            <td>Message</td>
+            <td>{message}</td>
           </tr>
         </tbody>
       </table>

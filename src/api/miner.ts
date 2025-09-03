@@ -5,7 +5,7 @@ export type MinerInfo = {
   link: string;
 };
 
-function hexToAscii(hex: string): string {
+export function hexToAscii(hex: string): string {
   let str = "";
   for (let i = 0; i < hex.length; i += 2) {
     const code = parseInt(hex.slice(i, i + 2), 16);

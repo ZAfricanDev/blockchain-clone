@@ -98,6 +98,7 @@ export async function getLastBlocks(
   fromTime: number,
   daysBack: number
 ): Promise<Block[]> {
+  //Use 5 mins, current avg block time is roughly 10 mins so should get a good amount of leeway
   const FIVE_MINUTES_MS = 5 * 60 * 1000;
 
   const lastRetrieved = Number(localStorage.getItem("block_info_time")) || 0;
@@ -119,31 +120,36 @@ export async function getLastBlocks(
   }
 
   const url = `https://blockchain.info/blocks/${fromTime}?format=json&cors=true`;
-  const res = await fetch(url);
-  if (!res.ok) {
-    const body = await res.text().catch(() => null);
-    throw { status: res.status, statusText: res.statusText, body };
+  try {
+    const res = await fetch(url);
+
+    const json: BlockResponse[] = await res.json();
+
+    const cutoff = Math.floor(fromTime / 1000) - daysBack * 24 * 60 * 60;
+
+    const latestHeight = json[0]?.height ?? 0;
+    localStorage.setItem("latestBlockHeight", latestHeight.toString());
+
+    const relevantItems = json.filter((b) => b.time >= cutoff).slice(0, limit);
+
+    const results = await Promise.all(
+      relevantItems.map(async (item) => {
+        return fetchBlockByHash(item.hash);
+      })
+    );
+
+    localStorage.setItem("block_info", JSON.stringify(results));
+
+    localStorage.setItem("block_info_time", String(Date.now()));
+
+    return results;
+  } catch (e) {
+    if (e instanceof Error) {
+      throw { "Message:": e.message };
+    } else {
+      throw { "Unknown error:": e };
+    }
   }
-  const json: BlockResponse[] = await res.json();
-
-  const cutoff = Math.floor(fromTime / 1000) - daysBack * 24 * 60 * 60;
-
-  const latestHeight = json[0]?.height ?? 0;
-  localStorage.setItem("latestBlockHeight", latestHeight.toString());
-
-  const relevantItems = json.filter((b) => b.time >= cutoff).slice(0, limit);
-
-  const results = await Promise.all(
-    relevantItems.map(async (item) => {
-      return fetchBlockByHash(item.hash);
-    })
-  );
-
-  localStorage.setItem("block_info", JSON.stringify(results));
-
-  localStorage.setItem("block_info_time", String(Date.now()));
-
-  return results;
 }
 
 export async function fetchBlockByHash(blockHash: string): Promise<Block> {
@@ -181,12 +187,10 @@ export async function fetchPrices(): Promise<Prices> {
     BCH: json.BCH?.USD?.last ?? -1,
   };
 }
-
 const satoshiToBTC = (sat?: number | string) => {
   if (sat == null) return 0;
-  const n = typeof sat === "string" ? parseInt(sat, 10) : sat;
-  if (!Number.isFinite(n)) return 0;
-  return n / 1e8;
+  const n = Number(sat);
+  return Number.isFinite(n) ? n / 1e8 : 0;
 };
 
 export const formatBtc = (satoshis?: number | string) =>
@@ -198,25 +202,23 @@ function safeInputs(inputs?: TxInput[] | any): TxInput[] {
 
 export function getBlockReward(transactions: any) {
   if (!transactions || transactions.length === 0) return 0;
-
   const coinbaseTx = transactions[0];
-
-  const totalSatoshis = coinbaseTx.out.reduce(
-    (sum: number, output: any) => sum + output.value,
+  const outs = Array.isArray(coinbaseTx.out) ? coinbaseTx.out : [];
+  const totalSatoshis = outs.reduce(
+    (sum: number, o: any) => sum + (Number(o?.value ?? 0) || 0),
     0
   );
-
   return formatBtc(totalSatoshis);
 }
 
 function bitsToTarget(bits: number): bigint {
-  const exponent = bits >>> 24;
-  const mantissa = bits & 0xffffff;
-  return BigInt(mantissa) << BigInt(8 * (exponent - 3));
+  const exp = bits >>> 24;
+  const mant = bits & 0xffffff;
+  return BigInt(mant) << BigInt(8 * (exp - 3));
 }
 
 export function getDifficulty(bits: number): number {
-  const maxTarget = bitsToTarget(0x1d00ffff); // difficulty 1 target
+  const maxTarget = bitsToTarget(0x1d00ffff);
   const target = bitsToTarget(bits);
   return Number(maxTarget) / Number(target);
 }
@@ -226,48 +228,43 @@ export function mapApiTxToUi(
   blockTime?: number
 ): UiTransaction {
   const inputsArr = safeInputs(tx.inputs);
+  const outs = Array.isArray(tx.out) ? tx.out : [];
+
+  const toFinite = (v: any) => {
+    const n = typeof v === "string" ? parseInt(v, 10) : Number(v ?? 0);
+    return Number.isFinite(n) ? n : 0;
+  };
 
   const inputs: string[] = inputsArr.map((inp: any) => {
     const prev = inp?.prev_out;
-    if (prev && prev.addr) return prev.addr as string;
-    return "COINBASE (Newly Generated Coins)";
+    return prev?.addr
+      ? (prev.addr as string)
+      : "COINBASE (Newly Generated Coins)";
   });
 
-  const outputs: string[] = (Array.isArray(tx.out) ? tx.out : []).map(
-    (o: any) => {
-      const v = o?.value ?? 0;
-      const addr = o?.addr ? `${o.addr} ` : "";
-      return `${addr}${formatBtc(v)}`;
-    }
-  );
+  const outputs: string[] = outs.map((o: any) => {
+    const v = toFinite(o?.value);
+    const addr = o?.addr ? `${o.addr} ` : "";
+    return `${addr}${formatBtc(v)}`;
+  });
 
-  const totalOutSat = (Array.isArray(tx.out) ? tx.out : []).reduce(
-    (acc: number, o: any) => {
-      const v =
-        typeof o?.value === "string" ? parseInt(o.value, 10) : o?.value ?? 0;
-      return acc + (Number.isFinite(v) ? v : 0);
-    },
+  const totalOutSat = outs.reduce(
+    (acc: number, o: any) => acc + toFinite(o?.value),
     0
   );
 
   const totalInSat = inputsArr.reduce((acc: number, inp: any) => {
     const prev = inp?.prev_out;
-    const v = prev
-      ? typeof prev.value === "string"
-        ? parseInt(prev.value, 10)
-        : prev.value ?? 0
-      : 0;
-    return acc + (Number.isFinite(v) ? v : 0);
+    return acc + (prev ? toFinite(prev.value) : 0);
   }, 0);
 
   const feeSat = totalInSat > 0 ? Math.max(0, totalInSat - totalOutSat) : NaN;
   const fee = Number.isFinite(feeSat) ? formatBtc(feeSat) : "-";
   const total = formatBtc(totalOutSat);
-  const timestamp = tx.time
-    ? new Date(tx.time * 1000).toLocaleString()
-    : blockTime
-    ? new Date(blockTime * 1000).toLocaleString()
-    : "—";
+
+  const timeSec = tx.time ?? blockTime;
+  const timestamp = timeSec ? new Date(timeSec * 1000).toLocaleString() : "—";
+  const highestBlock = Number(localStorage.getItem("latestBlockHeight"));
 
   return {
     hash: tx.hash,
