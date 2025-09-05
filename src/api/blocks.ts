@@ -19,6 +19,9 @@ export type UiTransaction = {
   values: string[];
   feeDetails?: string;
   total: string;
+  sizeBytes: number;
+  satPerWU: number;
+  satPerByte: number;
 };
 
 export type PrevOut = {
@@ -211,9 +214,10 @@ export function getBlockReward(transactions: any) {
   return formatBtc(totalSatoshis);
 }
 
+//Difficulty / target calculation
 function bitsToTarget(bits: number): bigint {
-  const exp = bits >>> 24;
-  const mant = bits & 0xffffff;
+  const exp = bits >>> 24; // Get first byte using right shift of 24 bits
+  const mant = bits & 0xffffff; // Get last 24 bits
   return BigInt(mant) << BigInt(8 * (exp - 3));
 }
 
@@ -259,12 +263,21 @@ export function mapApiTxToUi(
   }, 0);
 
   const feeSat = totalInSat > 0 ? Math.max(0, totalInSat - totalOutSat) : NaN;
-  const fee = Number.isFinite(feeSat) ? formatBtc(feeSat) : "-";
+  const fee = Number.isFinite(feeSat) ? formatBtc(feeSat) : "0.00 BTC";
   const total = formatBtc(totalOutSat);
 
   const timeSec = tx.time ?? blockTime;
   const timestamp = timeSec ? new Date(timeSec * 1000).toLocaleString() : "—";
+  const sizeBytes = tx.size ?? 0;
+  const weightUnits = (tx as any).weight ?? sizeBytes * 4; // fallback if weight missing
   const highestBlock = Number(localStorage.getItem("latestBlockHeight"));
+
+  const confirmations = highestBlock - tx.block_height + 1 || 1;
+
+  const satPerByte =
+    sizeBytes > 0 ? (Number(feeSat) ? Number(feeSat) / sizeBytes : 0) : 0;
+  const satPerWU =
+    weightUnits > 0 ? (Number(feeSat) ? Number(feeSat) / weightUnits : 0) : 0;
 
   return {
     hash: tx.hash,
@@ -272,10 +285,13 @@ export function mapApiTxToUi(
     outputs,
     fee,
     value: total,
-    confirmations: 1,
+    confirmations: confirmations,
     timestamp,
     values: outputs,
     feeDetails: undefined,
     total,
+    sizeBytes,
+    satPerWU,
+    satPerByte,
   };
 }

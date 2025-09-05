@@ -36,6 +36,11 @@ export function Transactions({ transactions }: Props) {
                   <div className="fee-info">
                     {tx.fee}
                     <div className="fee-sub">{tx.feeDetails}</div>
+
+                    <div className="fee-extra">
+                      {tx.satPerByte.toFixed(3)} sat/B -{" "}
+                      {tx.satPerWU.toFixed(3)} sat/WU - {tx.sizeBytes} bytes
+                    </div>
                   </div>
                 </div>
               </td>

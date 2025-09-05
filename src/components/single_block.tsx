@@ -21,10 +21,10 @@ import { hexToAscii } from "../api/miner";
 export function SingleBlock() {
   const params = useParams<{ coin: Coins; block: string }>();
   const { coin, block: blockHash } = params;
-  console.log("blockHash", blockHash);
+
   const localItems = localStorage.getItem("block_info") || "[]";
   const localBlocks = JSON.parse(localItems);
-  console.log("localBlocks", localBlocks);
+
   const localBlock = localBlocks.find(
     (item: Block) =>
       item.hash === blockHash || item.height === Number(blockHash)
@@ -37,8 +37,8 @@ export function SingleBlock() {
     if (!localBlock) {
       const hash = blockHash ?? blockInfo?.hash;
       if (!hash) return;
-
       setLoading(true);
+
       fetchBlockByHash(hash)
         .then((b) => setBlockInfo(b as Block))
         .catch((err) => console.error("fetchBlockByHash:", err))
